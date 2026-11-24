@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linwrath_Pulse</title>
+<meta name="description" content="Linwrath_Pulse builds line-follower robots, circuit boards, 3D-printed parts and market-timing research tools.">
+<meta property="og:title" content="Linwrath_Pulse">
+<meta property="og:description" content="Student, maker of PULSE robot boards, and a market-timing researcher.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/avatar.jpg">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0e0b17">
+<link rel="icon" href="assets/avatar.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1795557044">
+</head>
+<body>
+<canvas id="stage" aria-hidden="true"></canvas>
+<script>if (location.search.includes("flat=1")) document.documentElement.classList.add("flat");</script>
+<header class="nav">
+  <a class="nav__mark" href="#top">linwrath_pulse</a>
+  <nav aria-label="Sections"><a href="#me">me</a><a href="#pulse">pulse</a><a href="#work">work</a><a href="#skills">skills</a></nav>
+  <a class="btn btn--primary btn--sm" href="https://github.com/alinvarat">github</a>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="h">
+    <div class="hero__intro">
+      <h1 id="h">linwrath_pulse</h1>
+      <div class="hero__foot">
+        <p class="lead">Student, maker of PULSE robot boards, and a market-timing researcher.</p>
+        <div class="acts">
+          <a class="btn btn--primary" href="https://github.com/alinvarat">open github</a>
+          <a class="btn btn--secondary" href="https://pulse-linesim.netlify.app">try linesim</a>
+        </div>
+      </div>
+      <p class="hero__cue readout" aria-hidden="true">scroll to ride along</p>
+    </div>
+    <div class="hero__chase">
+      <ol class="tags" aria-label="Parts of the robot">
+        <li data-part="bar">16-sensor bar, red LEDs underneath</li>
+        <li data-part="board">main board and motor drivers</li>
+        <li data-part="wheel">drive wheel and motor</li>
+      </ol>
+      <figure class="hud">
+        <figcaption><strong>chase cam.</strong> A PD loop on a 16-sensor bar steers this robot live in your browser. The lap time is this demo’s, not a real robot’s.</figcaption>
+        <div class="hud__row">
+          <div><span class="label">sensors</span><span class="sensorbar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div><span class="label">last lap</span><output id="lap-out" class="readout">first lap</output></div>
+        </div>
+        <div class="hud__row">
+          <label for="speed">speed <output id="speed-out" class="readout">0.40</output></label>
+          <input id="speed" type="range" min="20" max="70" value="40">
+          <button id="run" class="btn btn--secondary btn--sm" type="button" aria-pressed="true" hidden>pause</button>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <div class="sheet">
+  <section class="container section about" id="me" aria-labelledby="m">
+    <figure class="portrait"><img src="assets/avatar.jpg" width="720" height="720" alt="Linwrath_Pulse outdoors, Mount Fuji behind"></figure>
+    <div class="about__text">
+      <h2 id="m">hi, i’m linwrath.</h2>
+      <p class="lead">I’m a university student who runs PULSE on the side.</p>
+      <p>I design the boards, write the Arduino libraries, print the parts and write the Thai manuals myself. Then I build them in batches of about ten and sell them to students, teachers and schools.</p>
+      <p>When a robot misbehaves I would rather simulate it than guess, which is how LineSim started. The same habit of testing before trusting runs through TradeLab.</p>
+    </div>
+    <dl class="facts well">
+      <div><dt>what I run</dt><dd>PULSE, robot boards and kits</dd></div>
+      <div><dt>who buys</dt><dd>students, teachers, schools</dd></div>
+      <div><dt>batch size</dt><dd class="readout">about 10 sets</dd></div>
+      <div><dt>also for hire</dt><dd>PCB design on Fastwork</dd></div>
+      <div><dt>day job</dt><dd>university student</dd></div>
+    </dl>
+  </section>
+
+  <section class="band" id="pulse" aria-labelledby="pl">
+    <div class="container">
+      <div class="head">
+        <h2 id="pl">pulse</h2>
+        <p>The boards I make and sell. Every library ships with a Thai manual.</p>
+      </div>
+      <div class="products">
+        <article class="product well">
+          <h3>pulsemini v2.2</h3>
+          <p>The brain of the line follower. Comes with board, line-follower and line-follower-pro libraries, including per-stage record and replay.</p>
+        </article>
+        <article class="product well">
+          <canvas class="board3d" data-model="models/16mux.glb?v=10" aria-label="3D model of the 16MuxV3 sensor bar, from its KiCad file"></canvas>
+          <h3>pulse 16mux v3</h3>
+          <p>A 16-channel line sensor bar, calibrated in software so the robot reads the line the same way on any mat.</p>
+        </article>
+        <article class="product product--wide well">
+          <h3>pcb design</h3>
+          <p>Custom boards drawn in KiCad or EasyEDA, checked and exported for fabrication.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+<section class="band" id="work" aria-labelledby="w">
+    <div class="container">
+      <div class="head">
+        <h2 id="w">the work</h2>
+        <p>Open a row to see the source.</p>
+      </div>
+      <figure class="shot"><img src="assets/linesim.jpg?v=2" width="1360" height="840" alt="LineSim running a robot around the Senior 240 by 140 cm track, with live sensor, PID and motor readouts" loading="lazy"><figcaption>LineSim on the Senior track: the robot’s 16 sensors and every PID value as it runs.</figcaption></figure>
+      <ul class="rows">
+        <li><a class="row" href="https://pulse-linesim.netlify.app"><span class="row__name">linesim</span><span class="row__what">Tunes a line follower’s PID in the browser, then replays the recorded run.</span><span class="row__tag tag tag--live">live</span></a></li>
+        <li><a class="row" href="https://github.com/alinvarat/tradelab"><span class="row__name">tradelab</span><span class="row__what">Paper-trading simulator and market-timing research. Simulated money only.</span><span class="row__tag readout">alinvarat/tradelab</span></a></li>
+        <li><a class="row" href="https://github.com/alinvarat/pulse-3d"><span class="row__name">pulse 3d</span><span class="row__what">Upload a model, pick a material and infill, request a print quote.</span><span class="row__tag readout">alinvarat/pulse-3d</span></a></li>
+        <li><a class="row" href="https://github.com/alinvarat/agent-skills"><span class="row__name">agent skills</span><span class="row__what">Skills for AI coding agents, from PCB checks to debugging. One repository each.</span><span class="row__tag readout">alinvarat/agent-skills</span></a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="container section" id="path" aria-labelledby="p">
+    <div class="head">
+      <h2 id="p">from board to track</h2>
+      <p>How one of my robots gets made.</p>
+    </div>
+    <ol class="path well blueprint">
+      <li><span class="readout">01</span><strong>board</strong><span>schematic and layout in KiCad</span></li>
+      <li><span class="readout">02</span><strong>body</strong><span>parts modelled in FreeCAD, then printed</span></li>
+      <li><span class="readout">03</span><strong>firmware</strong><span>an Arduino library for the sensors and motors</span></li>
+      <li class="is-brass"><span class="readout">04</span><strong>tune</strong><span>PID tuned in LineSim before the real track</span></li>
+      <li><span class="readout">05</span><strong>track</strong><span>record a lap, then replay it</span></li>
+    </ol>
+  </section>
+
+  <section class="container section figures" aria-label="Two numbers from the work">
+    <div class="figure well">
+      <span class="label">per-stage replay, PulseMini V2.2</span>
+      <p class="figure__value">150<span class="readout">segments</span></p>
+      <p>Speed and PID stored for each stretch of track, in 1,016 of the board’s 1,024 bytes of EEPROM.</p>
+    </div>
+    <div class="figure well">
+      <span class="label">linesim sensor table</span>
+      <p class="figure__value">2.43<span class="readout">million points</span></p>
+      <p>Light samples the GPU prepares per track, so sensor reads during tuning come from a table.</p>
+    </div>
+  </section>
+
+  <section class="container section" id="skills" aria-labelledby="sk">
+    <div class="head">
+      <h2 id="sk">skills i wrote for ai agents</h2>
+      <p>28 instruction packages I use every day with Claude Code: hardware checks, debugging, documents and business planning.</p>
+    </div>
+    <ul class="skills">
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/3d-print-prep">3d-print-prep</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/arduino-robotics-libraries">arduino-robotics-libraries</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/document-suite">document-suite</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/ee-datasheet-master">ee-datasheet-master</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/ffmpeg-video-toolkit">ffmpeg-video-toolkit</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-board">founder-board</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-brand">founder-brand</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-cfo">founder-cfo</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-competitors">founder-competitors</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-consumer">founder-consumer</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-launch">founder-launch</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-marketing">founder-marketing</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-offer">founder-offer</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-ops">founder-ops</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-plan">founder-plan</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/founder-pricing">founder-pricing</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/freecad-part-design">freecad-part-design</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/grill-me">grill-me</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/grilling">grilling</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/jlcpcb-parts-matcher">jlcpcb-parts-matcher</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/kicad-board-design">kicad-board-design</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/linux-troubleshooting">linux-troubleshooting</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/pcb-fab-prep">pcb-fab-prep</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/systematic-debugging">systematic-debugging</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/verification-before-completion">verification-before-completion</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/windows-health-check">windows-health-check</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/writing-for-agents">writing-for-agents</a></li>
+        <li><a href="https://github.com/alinvarat/agent-skills/tree/main/skills/zero-to-pass-tutor">zero-to-pass-tutor</a></li>
+    </ul>
+  </section>
+
+  <section class="container section" id="notes" aria-labelledby="n">
+    <div class="head">
+      <h2 id="n">notebook</h2>
+      <p>What changed lately.</p>
+    </div>
+    <ol class="trail">
+      <li><span class="readout">2026-11-14</span><p><strong>pulsemini v2.2</strong> Per-stage speed and PID recording for replay runs. Real-board test still pending.</p></li>
+      <li><span class="readout">2026-11-15</span><p><strong>linesim</strong> New dark dashboard, published online.</p></li>
+      <li><span class="readout">2026-11-23</span><p><strong>tradelab</strong> Three research sprints a month, paper trading only.</p></li>
+      <li><span class="readout">2026-11-25</span><p><strong>github</strong> Old repositories archived; this year’s work published in English.</p></li>
+    </ol>
+  </section>
+</div>
+</main>
+
+<footer class="foot container">
+  <div class="foot__me">
+    <img src="assets/avatar.jpg" width="96" height="96" alt="Portrait of Linwrath_Pulse">
+    <h2>follow along on github.</h2>
+  </div>
+  <div class="foot__links">
+    <a href="https://github.com/alinvarat">github.com/alinvarat</a>
+    <a href="https://pulse-linesim.netlify.app">linesim</a>
+    <a href="https://github.com/alinvarat/agent-skills">agent skills</a>
+  </div>
+</footer>
+
+<script src="sim.js?v=1795557790"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module" src="viewer.js?v=1795556772"></script>
+<script type="module" src="scene.js?v=1795558049"></script>
+</body>
+</html>
