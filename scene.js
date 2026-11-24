@@ -213,10 +213,13 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('
     mini.position.set(-(vis.min.x + vis.max.x) / 2, -(vis.min.y + vis.max.y) / 2, -zb);
     boardWrap.position.set(0, boardY, boardZ);
   }
-  // the sensor loom ends in an 8-way housing pushed onto H1's first eight pins (x = -15.4 .. 2.4 mm, y = +13.5)
-  const h1x = -15.4 + 3.5 * 2.54, h1y = boardY + 13.5;
-  const ph = new THREE.Mesh(new THREE.BoxGeometry(8 * 2.54, 2.6, 6), M(C.rubber, { roughness: 0.5 }));
-  const sockY = h1y; ph.position.set(h1x, sockY, boardZ + 1.6 + 8.5 + 3); ph.castShadow = true; cad.add(ph);
+  // the sensor loom ends in PH2.0 3-pin plugs pushed into the board's row of eight vertical PH2.0-3P sockets
+  // (board edge at the rear: housings 50.1 mm wide centred at x = +3.7 mm, y = -3.7 mm in the EasyEDA board frame, 8.8 mm tall)
+  const sockPitch = 50.1 / 8, sockX0 = 3.7 - 50.1 / 2 + sockPitch / 2, sockY = boardY - 9, sockTop = boardZ + 1.6 + 8.8;
+  const plugMat = M(C.ink2, { roughness: 0.55 });
+  const plugs = [2, 3, 4]; // 8 wires as three 3-pin plugs (3 + 3 + 2)
+  for (const j of plugs) { const pl = new THREE.Mesh(new THREE.BoxGeometry(5.6, 4.2, 3.5), plugMat); pl.position.set(sockX0 + j * sockPitch, sockY, sockTop + 1.75); pl.castShadow = true; cad.add(pl); }
+  const wireEnd = (i) => { const j = plugs[Math.floor(i / 3)], pin = i % 3; return [sockX0 + j * sockPitch + (pin - 1) * 2, sockY]; };
 
 
   // ---- 16MuxV3 bar: placed first, because the rails are sized to its mounting holes ----
@@ -277,7 +280,7 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('
     }
   }
 
-  // ---- wire loom: 8 wires, J1 on the bar (PH2.0 x8, opening to the rear) to the housing on the board's H1 header ----
+  // ---- wire loom: 8 wires, J1 on the bar (PH2.0 x8, opening to the rear) to three PH2.0-3P plugs on the board ----
   const wireMat = M(C.wire, { roughness: 0.4 });
   const j1Y = barFront - 13.5 - 4, j1Z = -0.5 + 1.6 + 2; // J1 sits mid-bar on its top face, plug pointing back
   const plugBar = new THREE.Mesh(new THREE.BoxGeometry(19.9, 6, 4.5), M(C.ink2, { roughness: 0.6 })); plugBar.position.set(0, j1Y - 3, j1Z); cad.add(plugBar);
@@ -285,8 +288,8 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('
     const x = (i - 3.5) * 2;
     const c = new THREE.CatmullRomCurve3([
       new THREE.Vector3(x, j1Y - 6, j1Z), new THREE.Vector3(x, j1Y - 16, j1Z + 4),
-      new THREE.Vector3(x * 1.15, (j1Y + sockY) / 2, boardZ + 26), new THREE.Vector3(h1x + (i - 3.5) * 2.54, sockY + 4, boardZ + 26),
-      new THREE.Vector3(h1x + (i - 3.5) * 2.54, sockY, boardZ + 1.6 + 8.5 + 6),
+      new THREE.Vector3(x * 1.15, (j1Y + boardY) / 2, boardZ + 24), new THREE.Vector3(wireEnd(i)[0], boardY + 4, sockTop + 14),
+      new THREE.Vector3(wireEnd(i)[0], wireEnd(i)[1], sockTop + 3.5),
     ], false, 'centripetal');
     const t = new THREE.Mesh(new THREE.TubeGeometry(c, 60, 0.55, 6, false), wireMat); t.castShadow = true; cad.add(t);
   }

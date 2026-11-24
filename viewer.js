@@ -19,27 +19,28 @@ function fixNormals(g) {
 function mount(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.2;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.85;
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xffffff, tok('--color-paper-3'), 1.4));
+  scene.add(new THREE.HemisphereLight(0xffffff, tok('--color-paper-3'), 0.9));
   const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(3, 5, 4); scene.add(key);
-  const rim = new THREE.DirectionalLight(tok('--color-accent-2'), 1.6); rim.position.set(-4, 2, -3); scene.add(rim);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.8); rim.position.set(-4, 2, -3); scene.add(rim);
   const camera = new THREE.PerspectiveCamera(30, 1, 0.001, 100);
   const pivot = new THREE.Group(); scene.add(pivot);
-  let size = 1, spin = 0.5, drag = null, visible = false, raf = 0, last = 0;
+  let size = 1, base = 0, t = 0, spin = 0.5, drag = null, visible = false, raf = 0, last = 0;
 
   function fit() {
     const r = canvas.getBoundingClientRect(); if (!r.width) return;
     renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
     const d = size / (2 * Math.tan((camera.fov * Math.PI) / 360)) / Math.min(1, camera.aspect) * 0.78;
-    camera.position.set(0, d * 0.62, d * 0.85); camera.lookAt(0, 0, 0);
+    camera.position.set(0, d * 0.5, d * 0.95); camera.lookAt(0, 0, 0);
     camera.near = size / 1000; camera.far = size * 20; camera.updateProjectionMatrix(); // models come in mm (KiCad m, EasyEDA 10 mil): fit the clip range to the model
   }
   const draw = () => renderer.render(scene, camera);
   function loop(now) {
     raf = 0; if (!visible) return;
     const dt = last ? Math.min(0.05, (now - last) / 1000) : 0; last = now;
-    if (!drag) pivot.rotation.y += dt * 0.35;
+    // sway gently around the front view instead of spinning, so a long board never turns end-on to the camera
+    if (!drag) { t += dt; pivot.rotation.y = base + Math.sin(t * 0.5) * 0.5; }
     draw(); if (!reduce.matches || drag) raf = requestAnimationFrame(loop);
   }
   const kick = () => { if (!raf) { last = 0; raf = requestAnimationFrame(loop); } };
@@ -59,12 +60,16 @@ function mount(canvas) {
     model.updateMatrixWorld(true);
     const sph = new THREE.Sphere();
     model.traverse((o) => { if (o.isMesh) { o.geometry.computeBoundingSphere(); sph.copy(o.geometry.boundingSphere).applyMatrix4(o.matrixWorld); if (sph.radius > size) o.visible = false; } });
-    pivot.add(model); pivot.rotation.x = 0.0; fit(); draw(); kick();
+    pivot.add(model);
+    // front view: the board's long side across the screen
+    const sz2 = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
+    base = sz2.z > sz2.x ? Math.PI / 2 : 0; pivot.rotation.y = base;
+    fit(); draw(); kick();
   });
 
   canvas.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, r: pivot.rotation.y }; canvas.setPointerCapture(e.pointerId); kick(); });
   canvas.addEventListener('pointermove', (e) => { if (drag) { pivot.rotation.y = drag.r + (e.clientX - drag.x) * 0.01; } });
-  const end = () => { drag = null; };
+  const end = () => { if (drag) base = pivot.rotation.y - Math.sin(t * 0.5) * 0.5; drag = null; };
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) kick(); }, { rootMargin: '100px' }).observe(canvas);
   new ResizeObserver(() => { fit(); draw(); }).observe(canvas);
