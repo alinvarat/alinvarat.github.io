@@ -208,7 +208,9 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('
     // the PCB itself: the widest thin mesh; give it the board's real colour (blue solder mask, as in the EasyEDA 3D view)
     let pcbMesh = null, best = 0;
     mini.traverse((o) => { if (o.isMesh && o.visible) { tb.setFromObject(o).applyMatrix4(inv2); const s3 = tb.getSize(new THREE.Vector3()); if (s3.z < 12 && s3.x * s3.y > best) { best = s3.x * s3.y; pcbMesh = o; } } });
-    if (pcbMesh) pcbMesh.material = new THREE.MeshStandardMaterial({ color: 0x0b2a8c, roughness: 0.35, metalness: 0.1 });
+    // EasyEDA's OBJ winds some faces (the board body among them) the wrong way, so they vanish from above: draw both sides
+    mini.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); o.material.side = THREE.DoubleSide; } });
+    if (pcbMesh) pcbMesh.material = new THREE.MeshStandardMaterial({ color: 0x0b2a8c, roughness: 0.35, metalness: 0.1, side: THREE.DoubleSide });
     const zb = -6.3; // EasyEDA puts the board's top copper at z = 0 and its underside 1.6 mm (6.3 units) below
     mini.position.set(-(vis.min.x + vis.max.x) / 2, -(vis.min.y + vis.max.y) / 2, -zb);
     boardWrap.position.set(0, boardY, boardZ);

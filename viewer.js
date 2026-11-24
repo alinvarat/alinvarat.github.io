@@ -47,7 +47,7 @@ function mount(canvas) {
 
   loader.load(canvas.dataset.model, (g) => {
     const model = g.scene;
-    model.traverse((o) => { if (o.isMesh) fixNormals(o.geometry); });
+    model.traverse((o) => { if (o.isMesh) { fixNormals(o.geometry); o.material.side = THREE.DoubleSide; } }); // EasyEDA exports some faces wound backwards
     // lay the board flat (thinnest axis up), centre it
     const box = new THREE.Box3().setFromObject(model), s = box.getSize(new THREE.Vector3());
     const thin = [['x', s.x], ['y', s.y], ['z', s.z]].sort((a, b) => a[1] - b[1])[0][0];
