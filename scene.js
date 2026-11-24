@@ -216,7 +216,7 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('
     boardWrap.position.set(0, boardY, boardZ);
     boardWrap.rotation.z = Math.PI; // sockets face the sensor bar, as on the real robot
     // the board's top face: purple solder mask, gold pads and white silkscreen, from EasyEDA's SVG export of the same board
-    const top = new THREE.Mesh(new THREE.PlaneGeometry(76.2 / 0.254, 30.2 / 0.254), new THREE.MeshStandardMaterial({ map: new THREE.TextureLoader().load('models/pcb_top.png?v=1', (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; }), transparent: true, alphaTest: 0.5, roughness: 0.45, metalness: 0.1 }));
+    const top = new THREE.Mesh(new THREE.PlaneGeometry(75.6 / 0.254, 29.6 / 0.254), new THREE.MeshStandardMaterial({ map: new THREE.TextureLoader().load('models/pcb_top.png?v=2', (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; }), transparent: true, alphaTest: 0.5, roughness: 0.45, metalness: 0.1 }));
     let topZ = 0; if (pcbMesh) { pcbMesh.geometry.computeBoundingBox(); topZ = pcbMesh.geometry.boundingBox.max.z; }
     top.position.set((vis.min.x + vis.max.x) / 2, (vis.min.y + vis.max.y) / 2, topZ + 0.2); top.receiveShadow = true; mini.add(top);
   }

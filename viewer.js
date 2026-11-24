@@ -52,7 +52,7 @@ function mount(canvas) {
     if (canvas.dataset.top) {
       const b = new THREE.Box3(); model.traverse((o) => { if (o.isMesh && o.visible) b.union(new THREE.Box3().setFromObject(o)); });
       const tx = new THREE.TextureLoader().load(canvas.dataset.top, (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; draw(); });
-      const top = new THREE.Mesh(new THREE.PlaneGeometry(76.2 / 0.254, 30.2 / 0.254), new THREE.MeshStandardMaterial({ map: tx, transparent: true, alphaTest: 0.5, roughness: 0.45 }));
+      const top = new THREE.Mesh(new THREE.PlaneGeometry(75.6 / 0.254, 29.6 / 0.254), new THREE.MeshStandardMaterial({ map: tx, transparent: true, alphaTest: 0.5, roughness: 0.45 }));
       // the PCB body: the visible mesh with the largest footprint and little height; recolour it and put the print on its top face
       let pcb = null, best = 0; model.traverse((o) => { if (o.isMesh && o.visible) { o.geometry.computeBoundingBox(); const s2 = o.geometry.boundingBox.getSize(new THREE.Vector3()); if (s2.z < 15 && s2.x * s2.y > best) { best = s2.x * s2.y; pcb = o; } } });
       if (pcb) pcb.material = new THREE.MeshStandardMaterial({ color: 0x5b2a8f, roughness: 0.45, side: THREE.DoubleSide });
