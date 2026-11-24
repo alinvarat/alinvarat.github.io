@@ -31,8 +31,9 @@ function mount(canvas) {
   function fit() {
     const r = canvas.getBoundingClientRect(); if (!r.width) return;
     renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
-    const d = size / (2 * Math.tan((camera.fov * Math.PI) / 360)) / Math.min(1, camera.aspect) * 0.62;
+    const d = size / (2 * Math.tan((camera.fov * Math.PI) / 360)) / Math.min(1, camera.aspect) * 0.78;
     camera.position.set(0, d * 0.62, d * 0.85); camera.lookAt(0, 0, 0);
+    camera.near = size / 1000; camera.far = size * 20; camera.updateProjectionMatrix(); // models come in mm (KiCad m, EasyEDA 10 mil): fit the clip range to the model
   }
   const draw = () => renderer.render(scene, camera);
   function loop(now) {

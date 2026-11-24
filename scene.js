@@ -162,7 +162,7 @@ function plateShape() {
   return sh;
 }
 
-Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('models/mini21.glb?v=1')]).then(([drive, mux, mini]) => {
+Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('models/mini22.glb?v=2')]).then(([drive, mux, mini]) => {
   const bar = layFlat(mux);
   const kiMM = bar.size.z < 5 ? 1000 : 1; // KiCad's GLB is in metres
   const k = (half * 2) / (bar.size.z * kiMM); // world units per mm: the real 150 mm bar spans the sim's sensor bar
@@ -191,8 +191,28 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('
   // main board: Pulse_MiniV21 from Pulse.FCStd (EasyEDA export, 76 x 30 mm, holes on the plate's 70 x 24 standoffs),
   // already in board mm with x across, y forward, z up from the PCB underside; the H1 15-pin header edge faces the bar
   const boardZ = 2.5 + standoffH, boardY = P(0, 776)[1];
-  flatNormals(mini);
-  mini.position.set(0, boardY, boardZ); cad.add(mini);
+  // PulseMini V2.2 (EasyEDA project "PulseMiniV2.3"), OBJ export from EasyEDA: 10 mil units (0.254 mm), z up.
+  // The export also carries parts parked off the board, so the board is found from the densest 98 % of vertices.
+  keepNormals(mini);
+  const boardWrap = new THREE.Group(); boardWrap.add(mini); boardWrap.scale.setScalar(0.254); cad.add(boardWrap);
+  {
+    boardWrap.updateMatrixWorld(true);
+    const inv2 = new THREE.Matrix4().copy(boardWrap.matrixWorld).invert(), m = new THREE.Matrix4(), q = new THREE.Vector3();
+    const xs = [], ys = [], zs = [];
+    mini.traverse((o) => { if (!o.isMesh) return; m.multiplyMatrices(inv2, o.matrixWorld); const p = o.geometry.attributes.position;
+      for (let i = 0; i < p.count; i += 3) { q.fromBufferAttribute(p, i).applyMatrix4(m); xs.push(q.x); ys.push(q.y); zs.push(q.z); } });
+    const pct = (arr, t) => { arr.sort((u, w) => u - w); return arr[Math.floor((arr.length - 1) * t)]; };
+    const keep = new THREE.Box3(new THREE.Vector3(pct(xs, 0.01), pct(ys, 0.01), pct(zs, 0.01)), new THREE.Vector3(pct(xs, 0.99), pct(ys, 0.99), pct(zs, 0.99))).expandByScalar(40), tb = new THREE.Box3();
+    mini.traverse((o) => { if (o.isMesh) { tb.setFromObject(o).applyMatrix4(inv2); if (!keep.containsBox(tb)) o.visible = false; } });
+    const vis = new THREE.Box3(); mini.traverse((o) => { if (o.isMesh && o.visible) vis.union(tb.setFromObject(o).applyMatrix4(inv2)); });
+    // the PCB itself: the widest thin mesh; give it the board's real colour (blue solder mask, as in the EasyEDA 3D view)
+    let pcbMesh = null, best = 0;
+    mini.traverse((o) => { if (o.isMesh && o.visible) { tb.setFromObject(o).applyMatrix4(inv2); const s3 = tb.getSize(new THREE.Vector3()); if (s3.z < 12 && s3.x * s3.y > best) { best = s3.x * s3.y; pcbMesh = o; } } });
+    if (pcbMesh) pcbMesh.material = new THREE.MeshStandardMaterial({ color: 0x0b2a8c, roughness: 0.35, metalness: 0.1 });
+    const zb = -6.3; // EasyEDA puts the board's top copper at z = 0 and its underside 1.6 mm (6.3 units) below
+    mini.position.set(-(vis.min.x + vis.max.x) / 2, -(vis.min.y + vis.max.y) / 2, -zb);
+    boardWrap.position.set(0, boardY, boardZ);
+  }
   // the sensor loom ends in an 8-way housing pushed onto H1's first eight pins (x = -15.4 .. 2.4 mm, y = +13.5)
   const h1x = -15.4 + 3.5 * 2.54, h1y = boardY + 13.5;
   const ph = new THREE.Mesh(new THREE.BoxGeometry(8 * 2.54, 2.6, 6), M(C.rubber, { roughness: 0.5 }));
@@ -350,30 +370,34 @@ function shoot() {
   tmp.set(robot.position.x + fx * 0.8 * p, 0.25 * p, robot.position.z + fz * 0.8 * p);
   lookAt.lerpVectors(new THREE.Vector3(0, -4.5, 0), tmp, p);
   camera.lookAt(lookAt);
-  if (debugView) { const o = debugView === 'under' ? -1 : 1; mat.visible = floor.visible = grid.visible = strip.visible = o > 0; const c = robot.localToWorld(new THREE.Vector3(look * 0.45, 0, 0)); camera.position.set(c.x, o * 5.2, c.z); camera.up.set(Math.cos(sim.th), 0, Math.sin(sim.th)); camera.lookAt(c); }
+  if (debugView === 'board') { const c = robot.localToWorld(new THREE.Vector3(0.05, 0.3, 0)); camera.position.set(c.x - Math.cos(sim.th) * 1.6, 1.9, c.z - Math.sin(sim.th) * 1.6); camera.up.set(0, 1, 0); camera.lookAt(c); } else if (debugView) { const o = debugView === 'under' ? -1 : 1; mat.visible = floor.visible = grid.visible = strip.visible = o > 0; const c = robot.localToWorld(new THREE.Vector3(look * 0.45, 0, 0)); camera.position.set(c.x, o * 5.2, c.z); camera.up.set(Math.cos(sim.th), 0, Math.sin(sim.th)); camera.lookAt(c); }
   if (bokeh) { robot.localToWorld(focusPt.set(look * 0.75, 0.2, 0)); bokeh.uniforms.focus.value = camera.position.distanceTo(focusPt); bokeh.uniforms.aperture.value = 0.0022 * p; }
 }
 
 // part labels pinned to the robot in the chase view
+// anchors in robot space, from the CAD placement (KMM world units per mm): bar front corner, top of the main board, top of the right tyre
+const KMM = (half * 2) / 150;
 const anchors = {
-  bar: new THREE.Vector3(look, 0.22, half * 0.55),
-  board: new THREE.Vector3(-0.32, 0.45, -0.3),
-  wheel: new THREE.Vector3(0.05, 0.42, 1.25),
+  bar: new THREE.Vector3(look, 6 * KMM, half * 0.55),
+  board: new THREE.Vector3((-25.1 + 29.1) * KMM, (3.9 + 2.5 + 15 + 1.6 + 8) * KMM, 22 * KMM),
+  wheel: new THREE.Vector3(0, (3.9 + 8.6 + 12.5) * KMM, -70 * KMM),
 };
-const tags = [...document.querySelectorAll('.tags li')];
+const tags = [...document.querySelectorAll('.tags li')].map((el) => ({ el, x: null, y: null, w: 0 }));
 const v = new THREE.Vector3();
 function label() {
   const p = forceP || Math.min(1, Math.max(0, window.scrollY / (window.innerHeight * 0.9)));
   const show = p > 0.75;
   const w = window.innerWidth, h = window.innerHeight;
-  for (const li of tags) {
-    const a = anchors[li.dataset.part];
-    robot.localToWorld(v.copy(a)).project(camera);
+  for (const t of tags) {
+    robot.localToWorld(v.copy(anchors[t.el.dataset.part])).project(camera);
     const x = (v.x * 0.5 + 0.5) * w, y = (-v.y * 0.5 + 0.5) * h;
-    const inView = v.z < 1 && x > 0 && x < w && y > 60 && y < h;
-    li.classList.toggle('is-on', show && inView);
-    const half = (li.offsetWidth || 160) / 2 + 8, cx = Math.min(w - half, Math.max(half, x)); // keep the whole tag on screen
-    li.style.transform = `translate(${Math.round(cx)}px, ${Math.round(y)}px) translate(-50%, -140%)`;
+    // ease toward the target so the robot's steering wiggle doesn't shake the text
+    if (t.x === null) { t.x = x; t.y = y; } else { t.x += (x - t.x) * 0.08; t.y += (y - t.y) * 0.08; }
+    const inView = v.z < 1 && t.x > 0 && t.x < w && t.y > 60 && t.y < h;
+    t.el.classList.toggle('is-on', show && inView);
+    if (!t.w) t.w = t.el.offsetWidth || 160;
+    const hw = t.w / 2 + 8, cx = Math.min(w - hw, Math.max(hw, t.x));
+    t.el.style.transform = `translate3d(${cx.toFixed(1)}px, ${t.y.toFixed(1)}px, 0) translate(-50%, -140%)`;
   }
 }
 
