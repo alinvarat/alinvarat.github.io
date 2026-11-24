@@ -162,7 +162,7 @@ function plateShape() {
   return sh;
 }
 
-Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10')]).then(([drive, mux]) => {
+Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('models/mini21.glb?v=1')]).then(([drive, mux, mini]) => {
   const bar = layFlat(mux);
   const kiMM = bar.size.z < 5 ? 1000 : 1; // KiCad's GLB is in metres
   const k = (half * 2) / (bar.size.z * kiMM); // world units per mm: the real 150 mm bar spans the sim's sensor bar
@@ -188,15 +188,15 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10')]).then(
     const [x, y] = P(px, py);
     const so = new THREE.Mesh(new THREE.CylinderGeometry(2.75, 2.75, standoffH, 6), nylon); so.rotation.x = Math.PI / 2; so.position.set(x, y, 2.5 + standoffH / 2); so.castShadow = true; cad.add(so);
   }
-  // main board: a plain 80 x 30 mm stand-in at PulseMini V2.2's size (no V2.2 3D file on hand; the V3 file is unreleased
-  // and stays off the site). Its 8-pin PH2.0 socket faces the sensor bar, where the loom plugs in.
+  // main board: Pulse_MiniV21 from Pulse.FCStd (EasyEDA export, 76 x 30 mm, holes on the plate's 70 x 24 standoffs),
+  // already in board mm with x across, y forward, z up from the PCB underside; the H1 15-pin header edge faces the bar
   const boardZ = 2.5 + standoffH, boardY = P(0, 776)[1];
-  const bshape = new THREE.Shape(); bshape.moveTo(-40, -15); bshape.lineTo(40, -15); bshape.lineTo(40, 15); bshape.lineTo(-40, 15); bshape.lineTo(-40, -15);
-  for (const [x, y] of [[-35, -12], [35, -12], [-35, 12], [35, 12]]) { const h = new THREE.Path(); h.absarc(x, y, 1.6, 0, Math.PI * 2, true); bshape.holes.push(h); }
-  const boardMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(bshape, { depth: 1.6, bevelEnabled: false, curveSegments: 16 }), M(C.pcb2, { roughness: 0.45 }));
-  boardMesh.position.set(0, boardY, boardZ); boardMesh.castShadow = true; cad.add(boardMesh);
-  const ph = new THREE.Mesh(new THREE.BoxGeometry(8 * 2 + 3.9, 6, 4.5), M(C.ink2, { roughness: 0.6 })); // PH2.0 x8 housing, 2 mm pitch
-  const sockY = boardY + 15 - 3; ph.position.set(0, sockY, boardZ + 1.6 + 2.25); ph.castShadow = true; cad.add(ph);
+  flatNormals(mini);
+  mini.position.set(0, boardY, boardZ); cad.add(mini);
+  // the sensor loom ends in an 8-way housing pushed onto H1's first eight pins (x = -15.4 .. 2.4 mm, y = +13.5)
+  const h1x = -15.4 + 3.5 * 2.54, h1y = boardY + 13.5;
+  const ph = new THREE.Mesh(new THREE.BoxGeometry(8 * 2.54, 2.6, 6), M(C.rubber, { roughness: 0.5 }));
+  const sockY = h1y; ph.position.set(h1x, sockY, boardZ + 1.6 + 8.5 + 3); ph.castShadow = true; cad.add(ph);
 
 
   // ---- 16MuxV3 bar: placed first, because the rails are sized to its mounting holes ----
@@ -257,7 +257,7 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10')]).then(
     }
   }
 
-  // ---- wire loom: 8 wires, J1 on the bar (PH2.0 x8, opening to the rear) to the board's PH2.0 x8 socket ----
+  // ---- wire loom: 8 wires, J1 on the bar (PH2.0 x8, opening to the rear) to the housing on the board's H1 header ----
   const wireMat = M(C.wire, { roughness: 0.4 });
   const j1Y = barFront - 13.5 - 4, j1Z = -0.5 + 1.6 + 2; // J1 sits mid-bar on its top face, plug pointing back
   const plugBar = new THREE.Mesh(new THREE.BoxGeometry(19.9, 6, 4.5), M(C.ink2, { roughness: 0.6 })); plugBar.position.set(0, j1Y - 3, j1Z); cad.add(plugBar);
@@ -265,8 +265,8 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10')]).then(
     const x = (i - 3.5) * 2;
     const c = new THREE.CatmullRomCurve3([
       new THREE.Vector3(x, j1Y - 6, j1Z), new THREE.Vector3(x, j1Y - 16, j1Z + 4),
-      new THREE.Vector3(x * 1.15, (j1Y + sockY) / 2, boardZ + 16), new THREE.Vector3(x, sockY + 12, boardZ + 8),
-      new THREE.Vector3(x, sockY + 3, boardZ + 1.6 + 2.25),
+      new THREE.Vector3(x * 1.15, (j1Y + sockY) / 2, boardZ + 26), new THREE.Vector3(h1x + (i - 3.5) * 2.54, sockY + 4, boardZ + 26),
+      new THREE.Vector3(h1x + (i - 3.5) * 2.54, sockY, boardZ + 1.6 + 8.5 + 6),
     ], false, 'centripetal');
     const t = new THREE.Mesh(new THREE.TubeGeometry(c, 60, 0.55, 6, false), wireMat); t.castShadow = true; cad.add(t);
   }
