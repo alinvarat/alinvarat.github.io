@@ -211,14 +211,14 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('
     // EasyEDA's OBJ winds some faces (the board body among them) the wrong way, so they vanish from above: draw both sides
     mini.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); o.material.side = THREE.DoubleSide; } });
     if (pcbMesh) pcbMesh.material = new THREE.MeshStandardMaterial({ color: 0x5b2a8f, roughness: 0.35, metalness: 0.1, side: THREE.DoubleSide });
-    const zb = -6.3; // EasyEDA puts the board's top copper at z = 0 and its underside 1.6 mm (6.3 units) below
-    mini.position.set(-(vis.min.x + vis.max.x) / 2, -(vis.min.y + vis.max.y) / 2, -zb);
+    // centre on the PCB body itself (overhanging terminals would skew the parts' bounds) and sit its underside on the standoffs
+    const pb = pcbMesh ? new THREE.Box3().setFromObject(pcbMesh).applyMatrix4(inv2) : vis; // same frame as vis (mini still at the origin here)
+    mini.position.set(-(pb.min.x + pb.max.x) / 2, -(pb.min.y + pb.max.y) / 2, -pb.min.z);
     boardWrap.position.set(0, boardY, boardZ);
     boardWrap.rotation.z = Math.PI; // sockets face the sensor bar, as on the real robot
     // the board's top face: purple solder mask, gold pads and white silkscreen, from EasyEDA's SVG export of the same board
     const top = new THREE.Mesh(new THREE.PlaneGeometry(75.6 / 0.254, 29.6 / 0.254), new THREE.MeshStandardMaterial({ map: new THREE.TextureLoader().load('models/pcb_top.png?v=2', (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; }), transparent: true, alphaTest: 0.5, roughness: 0.45, metalness: 0.1 }));
-    let topZ = 0; if (pcbMesh) { pcbMesh.geometry.computeBoundingBox(); topZ = pcbMesh.geometry.boundingBox.max.z; }
-    top.position.set((vis.min.x + vis.max.x) / 2, (vis.min.y + vis.max.y) / 2, topZ + 0.2); top.receiveShadow = true; mini.add(top);
+    top.position.set((pb.min.x + pb.max.x) / 2, (pb.min.y + pb.max.y) / 2, pb.max.z + 0.2); top.receiveShadow = true; mini.add(top);
   }
   // the sensor loom ends in PH2.0 3-pin plugs pushed into the board's row of eight vertical PH2.0-3P sockets
   // (board turned 180° so this edge faces the bar: housings 50.1 mm wide centred at x = +3.7 mm, y = -3.7 mm in the EasyEDA board frame, 8.8 mm tall)

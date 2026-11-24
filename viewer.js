@@ -56,7 +56,8 @@ function mount(canvas) {
       // the PCB body: the visible mesh with the largest footprint and little height; recolour it and put the print on its top face
       let pcb = null, best = 0; model.traverse((o) => { if (o.isMesh && o.visible) { o.geometry.computeBoundingBox(); const s2 = o.geometry.boundingBox.getSize(new THREE.Vector3()); if (s2.z < 15 && s2.x * s2.y > best) { best = s2.x * s2.y; pcb = o; } } });
       if (pcb) pcb.material = new THREE.MeshStandardMaterial({ color: 0x5b2a8f, roughness: 0.45, side: THREE.DoubleSide });
-      top.position.set((b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (pcb ? pcb.geometry.boundingBox.max.z : 0) + 0.2); model.add(top);
+      model.updateMatrixWorld(true); const pb = pcb ? new THREE.Box3().setFromObject(pcb) : b; // centre on the PCB body, not on the overhanging parts
+      top.position.set((pb.min.x + pb.max.x) / 2, (pb.min.y + pb.max.y) / 2, pb.max.z + 0.2); model.add(top);
     }
     // lay the board flat (thinnest axis up), centre it
     const box = new THREE.Box3().setFromObject(model), s = box.getSize(new THREE.Vector3());
