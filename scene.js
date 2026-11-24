@@ -212,10 +212,11 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('
     const zb = -6.3; // EasyEDA puts the board's top copper at z = 0 and its underside 1.6 mm (6.3 units) below
     mini.position.set(-(vis.min.x + vis.max.x) / 2, -(vis.min.y + vis.max.y) / 2, -zb);
     boardWrap.position.set(0, boardY, boardZ);
+    boardWrap.rotation.z = Math.PI; // sockets face the sensor bar, as on the real robot
   }
   // the sensor loom ends in PH2.0 3-pin plugs pushed into the board's row of eight vertical PH2.0-3P sockets
-  // (board edge at the rear: housings 50.1 mm wide centred at x = +3.7 mm, y = -3.7 mm in the EasyEDA board frame, 8.8 mm tall)
-  const sockPitch = 50.1 / 8, sockX0 = 3.7 - 50.1 / 2 + sockPitch / 2, sockY = boardY - 9, sockTop = boardZ + 1.6 + 8.8;
+  // (board turned 180° so this edge faces the bar: housings 50.1 mm wide centred at x = +3.7 mm, y = -3.7 mm in the EasyEDA board frame, 8.8 mm tall)
+  const sockPitch = -50.1 / 8, sockX0 = -(3.7 - 50.1 / 2) + sockPitch / 2, sockY = boardY + 9, sockTop = boardZ + 1.6 + 8.8;
   const plugMat = M(C.ink2, { roughness: 0.55 });
   const plugs = [2, 3, 4]; // 8 wires as three 3-pin plugs (3 + 3 + 2)
   for (const j of plugs) { const pl = new THREE.Mesh(new THREE.BoxGeometry(5.6, 4.2, 3.5), plugMat); pl.position.set(sockX0 + j * sockPitch, sockY, sockTop + 1.75); pl.castShadow = true; cad.add(pl); }
@@ -288,7 +289,7 @@ Promise.all([load('models/drive.glb?v=8'), load('models/16mux.glb?v=10'), load('
     const x = (i - 3.5) * 2;
     const c = new THREE.CatmullRomCurve3([
       new THREE.Vector3(x, j1Y - 6, j1Z), new THREE.Vector3(x, j1Y - 16, j1Z + 4),
-      new THREE.Vector3(x * 1.15, (j1Y + boardY) / 2, boardZ + 24), new THREE.Vector3(wireEnd(i)[0], boardY + 4, sockTop + 14),
+      new THREE.Vector3(x * 1.15, (j1Y + sockY) / 2, sockTop + 14), new THREE.Vector3(wireEnd(i)[0], sockY + 6, sockTop + 9),
       new THREE.Vector3(wireEnd(i)[0], wireEnd(i)[1], sockTop + 3.5),
     ], false, 'centripetal');
     const t = new THREE.Mesh(new THREE.TubeGeometry(c, 60, 0.55, 6, false), wireMat); t.castShadow = true; cad.add(t);
