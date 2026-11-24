@@ -48,6 +48,16 @@ function mount(canvas) {
   loader.load(canvas.dataset.model, (g) => {
     const model = g.scene;
     model.traverse((o) => { if (o.isMesh) { fixNormals(o.geometry); o.material.side = THREE.DoubleSide; } }); // EasyEDA exports some faces wound backwards
+    // optional printed top (EasyEDA boards): a texture on the PCB's top face at z = 0, sized in the model's 10 mil units
+    if (canvas.dataset.top) {
+      const b = new THREE.Box3(); model.traverse((o) => { if (o.isMesh && o.visible) b.union(new THREE.Box3().setFromObject(o)); });
+      const tx = new THREE.TextureLoader().load(canvas.dataset.top, (t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; draw(); });
+      const top = new THREE.Mesh(new THREE.PlaneGeometry(76.2 / 0.254, 30.2 / 0.254), new THREE.MeshStandardMaterial({ map: tx, transparent: true, alphaTest: 0.5, roughness: 0.45 }));
+      // the PCB body: the visible mesh with the largest footprint and little height; recolour it and put the print on its top face
+      let pcb = null, best = 0; model.traverse((o) => { if (o.isMesh && o.visible) { o.geometry.computeBoundingBox(); const s2 = o.geometry.boundingBox.getSize(new THREE.Vector3()); if (s2.z < 15 && s2.x * s2.y > best) { best = s2.x * s2.y; pcb = o; } } });
+      if (pcb) pcb.material = new THREE.MeshStandardMaterial({ color: 0x5b2a8f, roughness: 0.45, side: THREE.DoubleSide });
+      top.position.set((b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (pcb ? pcb.geometry.boundingBox.max.z : 0) + 0.2); model.add(top);
+    }
     // lay the board flat (thinnest axis up), centre it
     const box = new THREE.Box3().setFromObject(model), s = box.getSize(new THREE.Vector3());
     const thin = [['x', s.x], ['y', s.y], ['z', s.z]].sort((a, b) => a[1] - b[1])[0][0];
